@@ -1,0 +1,49 @@
+{% extends 'common.html' %}
+{% block content %}
+{% include 'messages.html' %}
+{% include 'navbar.html' %}
+<main class="container mx-auto my-5">
+    <h3>
+        <strong>{{ exam_type }} Marks | {{ subject.name }}</strong>
+    </h3>
+    <form action="" method="post" class="mt-5">
+        {% csrf_token %}
+        <div class="d-flex justify-content-end">
+            <div class="mt-3 w-25">
+                <select required class="form-control" name="exam_type" id="exam" required>
+                    <option value="">Select Exam</option>
+                    <option value="mid-term" {% if exam_type == 'Mid Term' %} selected {% endif %}>Mid Term</option>
+                    <option value="pre-board" {% if exam_type == 'Pre Board' %} selected {% endif %}>Pre Board</option>
+                </select>
+                <input class="mt-2 form-control" type="number" name="full_marks" placeholder="Enter full marks" required value="{{ full_marks }}" />
+            </div>
+        </div>
+        <table class="table table-striped mt-5">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Roll No</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Marks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in results %}
+                <tr>
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>{{ res.student.roll_number }}</td>
+                    <td>{{ res.student.full_name }}</td>
+                    <td>
+                        <input required type="number" class="form-control" name="marks_{{ res.student.id }}" value="{{ res.obtained_marks }}" />
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-end">
+            <a href="{% url 'record-marks' subject.slug %}" class="btn btn-secondary me-2">Go Back</a>
+            <button type="submit" class="btn btn-primary">Update Marks</button>
+        </div>
+    </form>
+</main>
+{% endblock content %}

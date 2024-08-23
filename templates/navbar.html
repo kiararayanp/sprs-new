@@ -1,0 +1,109 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'index' %}">
+            {% include 'logo.html' %}
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            {% if request.user.is_authenticated %}
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item ms-3">
+                    <a class="nav-link" aria-current="page" href="{% url 'home' %}">Home</a>
+                </li>
+
+                <li class="nav-item dropdown ms-3">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Tasks
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% for subject in view_subjects %}
+                        <li><a class="dropdown-item" href="{% url 'task' subject.slug %}">{{ subject.name }}</a></li>
+                        {% if not forloop.last %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% if request.user.role == 'teacher' %}
+                <li class="nav-item dropdown ms-3">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Attendance
+                    </a>
+                    <ul class="dropdown-menu">
+
+                        {% for subject in view_subjects %}
+                        <li><a class="dropdown-item" href="{% url 'attendance' subject.slug %}">{{ subject.name }}</a>
+                        </li>
+                        {% if not forloop.last %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li class="nav-item dropdown ms-3">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Record Marks
+                    </a>
+                    <ul class="dropdown-menu">
+
+                        {% for subject in view_subjects %}
+                        <li><a class="dropdown-item" href="{% url 'record-marks' subject.slug %}">{{ subject.name }}</a>
+                        </li>
+                        {% if not forloop.last %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li class="nav-item dropdown ms-3">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Predictions
+                    </a>
+                    <ul class="dropdown-menu">
+
+                        {% for subject in view_subjects %}
+                        <li><a class="dropdown-item" href="{% url 'prediction' subject.slug %}">{{ subject.name }}</a>
+                        </li>
+                        {% if not forloop.last %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endif %}
+                <!-- <li class="nav-item ms-3">
+                    <a class="nav-link" aria-current="page" href="{% url 'message' %}">Messages</a>
+                </li> -->
+
+            </ul>
+            {% endif %}
+            {% if request.user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    {{request.user.full_name}}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Profile</a></li>
+                    <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</nav>

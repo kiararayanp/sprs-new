@@ -1,0 +1,122 @@
+{% extends 'common.html' %} 
+{% block content %} 
+{% include 'messages.html' %}
+<div class="d-flex justify-content-center mt-5">
+    <div class="visually-hidden position-absolute top-0 end-0 m-3" style="width: 400px;" id="errorContainer">
+        <div class="alert alert-warning alert-dismissible fade show" id="errorMsg" role="alert">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <ul id="errorList"></ul>
+        </div>
+    </div>
+    <form class="w-25" method="post" enctype="multipart/form-data" id="studentRegisterForm">
+        {% csrf_token %}
+        <h4 class="mb-3">Student Register Form</h4>
+        <div class="mb-2">
+            <label for="exampleFormControlInput1" class="form-label">Full Name</label>
+            <input name="full_name" type="text" class="form-control" id="fullName" required />
+        </div>
+        <div class="mb-2">
+            <label for="exampleFormControlInput1" class="form-label">Email address</label>
+            <input name="email" type="email" class="form-control" id="email" required />
+        </div>
+        <div class="mb-2">
+            <label for="formFile" class="form-label">Semester</label>
+            <select name="semester_id" class="form-select" aria-label="Default select example" id="semester" required>
+                <option selected disabled value="">Select Semester</option>
+                {% for semester in semesters %}
+                <option value="{{semester.id}}">{{semester.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-2">
+            <label for="formFile" class="form-label">Image</label>
+            <input name="profile_image" class="form-control" type="file" id="profileImage" required>
+        </div>
+        <div class="mb-2">
+            <label for="inputPassword5" class="form-label">Password</label>
+            <input name="password" type="password" id="password" class="form-control" required />
+        </div>
+        <div class="mb-2">
+            <label for="inputPassword5" class="form-label">Confirm Password</label>
+            <input name="confirm_password" type="password" id="confirmPassword" class="form-control" required />
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary w-100">Register</button>
+            <p class="mt-1">
+                Already have an account? <a href="{% url 'login' %}">Login</a>
+            </p>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('studentRegisterForm').addEventListener('submit', function(event) {
+    let isValid = true;
+    let messages = [];
+
+    // Validate Full Name
+    const fullName = document.getElementById('fullName').value.trim();
+    const fullNameRegex = /^[A-Za-z]+( [A-Za-z]+){0,2}$/;
+    if (!fullNameRegex.test(fullName)) {
+        isValid = false;
+        messages.push('Full Name should only contain alphabets and up to 2 spaces.');
+    }
+
+    // Validate Email
+    const email = document.getElementById('email').value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        isValid = false;
+        messages.push('Please enter a valid email address.');
+    }
+
+    // Validate Semester
+    const semester = document.getElementById('semester').value;
+    if (semester === '' || semester === 'Select Semester') {
+        isValid = false;
+        messages.push('Please select a semester.');
+    }
+
+    // Validate Image
+    const profileImage = document.getElementById('profileImage').files[0];
+    if (!profileImage) {
+        isValid = false;
+        messages.push('Please upload an image.');
+    } else {
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validImageTypes.includes(profileImage.type)) {
+            isValid = false;
+            messages.push('Image must be in jpg, jpeg, png, or webp format.');
+        }
+    }
+
+    // Validate Password
+    const password = document.getElementById('password').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
+    if (password.length < 6) {
+        isValid = false;
+        messages.push('Password must be at least 6 characters long.');
+    }
+    if (password !== confirmPassword) {
+        isValid = false;
+        messages.push('Passwords do not match.');
+    }
+
+    if (!isValid) {
+        event.preventDefault();
+        const errorContainer = document.getElementById('errorContainer');
+        const errorList = document.getElementById('errorList');
+        
+        errorList.innerHTML = '';
+        messages.forEach(message => {
+            const li = document.createElement('li');
+            li.textContent = message;
+            li.classList.add('mb-2');
+            errorList.appendChild(li);
+        });
+
+        errorContainer.classList.remove('visually-hidden');
+    }
+});
+</script>
+{% endblock content %}

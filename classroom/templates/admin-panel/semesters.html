@@ -1,0 +1,66 @@
+{% extends 'common.html' %}
+{% block content %}{% include 'messages.html' %}
+<main class="d-flex">
+    <aside class="position-fixed"> {% include 'sidebar.html' %}</aside>
+
+    <div style="margin-left: 320px;" class="mt-4 w-100 me-5">
+        <h2 class="mb-4"><strong>Semesters</strong></h2>
+        <!-- Button trigger modal -->
+        <div class="d-flex justify-content-end mt-2">
+            <button type="button" class="btn btn-primary"
+                data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Add Semester
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <form class="modal-content" method="post">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Add Semester</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-floating mb-3">
+                                <input required type="text" class="form-control" id="floatingInput" name="semester_name"
+                                    placeholder="name@example.com">
+                                <label for="floatingInput">Eg: First Semester</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <input type="submit" class="btn btn-primary" name="add-semester" value="Add Semester">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Semester</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for semester in semesters %}
+                <tr>
+                    <th scope="row">{{forloop.counter}}</th>
+                    <td>{{semester.name}}</td>
+                    <td>
+                        <a href="{% url 'delete-semester' semester.id %}" class="btn btn-sm
+                            btn-danger">Delete</a>
+                        <a href="{% url 'semester-subjects' semester.name %}" class="btn btn-sm
+                            btn-primary">View Subjects</a>
+                    </td>
+
+
+                    {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+{% endblock content %}

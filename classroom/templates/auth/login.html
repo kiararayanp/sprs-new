@@ -1,0 +1,31 @@
+{% extends 'common.html' %}
+{% block content %}
+{% include 'messages.html' %}
+<div class="d-flex justify-content-center mt-5">
+    <form class="w-25" method="post">
+        {% csrf_token %}
+        <h3 class="mb-4">Login</h3>
+        <div class="mb-2">
+            <label for="exampleFormControlInput1" class="form-label">Email address</label>
+            <div id="emailHelpBlock" class="form-text text-danger">
+            </div>
+            <input name="email" type="email" class="form-control" id="exampleFormControlInput1">
+        </div>
+        <div class="mb-2">
+            <label for="inputPassword5" class="form-label">Password</label>
+            <div id="passwordHelpBlock" class="form-text text-danger">
+            </div>
+            <input name="password" type="password" id="inputPassword5" class="form-control">
+
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <p class="mt-1">
+                Don't have an account? <a href="{% url 'student-register' %}">Register</a>
+            </p>
+        </div>
+    </form>
+</div>
+
+
+{% endblock content %}

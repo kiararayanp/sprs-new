@@ -1,0 +1,56 @@
+{% extends 'common.html' %}
+{% block content %}
+{% include 'messages.html' %}
+{% include 'navbar.html' %}
+<main class="container mx-auto my-5">
+  <h3>
+    <strong>Predictions | {{subject.name}}</strong>
+  </h3>
+  <div class="alert alert-info my-3" role="alert">
+    Predictions are based on the data available in the system. Make sure the data is complete and correct to view
+    accurate predictions.
+    <!-- Predictions are based on the data available in the system. The prediction is based on the
+    following parameters: -->
+    <!-- <ul class="mt-2">
+      <li>Attendance</li>
+      <li>Task Completion</li>
+      <li>Mid Term Marks</li>
+      <li>Pre Board Score</li>
+    </ul> -->
+  </div>
+  {% if is_data_available %}
+  <table class="table table-striped mt-5">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Roll No</th>
+        <th scope="col">Name</th>
+        <th scope="col">Attendance</th>
+        <th scope="col">Task Completed</th>
+        <th scope="col">Mid Term Marks</th>
+        <th scope="col">Pre Board Score</th>
+        <th style="text-align: right;" class="text-primary">Final Score(Predicted)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%for data in student_data%}
+      <tr>
+        <th scope="row">{{forloop.counter}}</th>
+        <td>{{data.student_roll}}</td>
+        <td>{{data.student_name}}</td>
+        <td>{{data.avg_attendance}} %</td>
+        <td>{{data.avg_task_score}} %</td>
+        <td>{{data.mid_term_score}} %</td>
+        <td>{{data.pre_board_score}} %</td>
+        <td style="text-align: right;" class="text-primary">{{data.predicted_score}} %</td>
+      </tr>
+      {%endfor%}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="alert alert-warning" role="alert">
+    No data available for prediction.
+  </div>
+  {% endif %}
+</main>
+{% endblock content %}

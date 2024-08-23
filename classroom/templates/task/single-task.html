@@ -1,0 +1,288 @@
+{% extends 'common.html' %}
+{% block content %}
+{% include 'messages.html' %}
+{% include 'navbar.html' %}
+
+
+<main class="container mx-auto my-5">
+    <h3>
+        <strong><span class="text-capitalize">
+                {% if user.role == 'student' %}
+                {{task.task_type}}
+                {% endif %}
+                {% if user.role == 'teacher' %}
+                Submissions
+                {% endif %}
+            </span> | {{subject.name}}</strong>
+    </h3>
+    <div class="row mt-5">
+        <div class="col-8 pe-5">
+            {% if user.role == 'student' %}
+            <!-- Student submission form -->
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <input required name="attachment" type="file" class="form-control" id="exampleFormControlInput1"
+                        placeholder="name@example.com" />
+                </div>
+                <button {% if not task.can_submit_online or submission %} disabled {% endif %} type="submit"
+                    class="btn btn-primary">
+                    Submit Assignment
+                </button>
+                <p class="mt-4">
+                    {% if not task.can_submit_online %}
+                <figcaption class="blockquote-footer">
+                    You have to submit this assignment physically.
+                </figcaption>
+                {% endif %}
+                </p>
+            </form>
+            <!-- Submissions -->
+            <div class="mt-5">
+                <h4><strong>Submission</strong></h4>
+                {% if submission %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class=" d-flex justify-content-between">
+                            <div> <a target="_blank" href="{{submission.attachment.url}}"
+                                    class="btn btn-outline-secondary btn-sm">View My Submission</a>
+
+                                {% if remarks %}
+                                <div class="my-4">
+                                    <strong>Remarks : </strong>
+                                    {{remarks.feedback}}
+                                </div>
+                                {% endif %}
+
+                                <p class="card-text mt-3 text-capitalize">Submitted at {{submission.submitted_at}}</p>
+                            </div>
+                            <div>
+                                <span class="text-capitalize">
+                                    {% if submission.status == 'unchecked' %}
+                                    <span class="badge bg-warning">Unchecked</span>
+                                    {% endif %}
+                                    {% if submission.status == 'checked' %}
+                                    <span class="badge bg-success">Checked</span>
+                                    {% endif %}
+                                    {% if submission.status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <!-- Delete button Here -->
+                            {% if submission.status == 'rejected' %}
+                            <a href="{% url 'delete-submission' submission.id %}"
+                                class="btn btn-danger btn-sm">Delete</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {%endif%}
+                {% if not submission %}
+                <div class="alert alert-info" role="alert">
+                    You have not submitted yet.
+                </div>
+                {%endif%}
+            </div>
+            {% endif %}
+            {% if user.role == 'teacher' %}
+            <!-- teacher will view submissions here -->
+            {% if all_submissions %}
+            <div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Roll</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Submitted Date</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in all_submissions %}
+                        <tr>
+                            <th scope="row">
+                                {{forloop.counter}}
+                            </th>
+                            <td>{{submission.student.roll_number}}</td>
+                            <td>{{submission.student.full_name}}</td>
+                            <td class="text-capitalize">{{submission.submitted_at}}</td>
+                            <td class="text-capitalize">{{submission.status}}</td>
+                            <td>
+                                <a href="{% url 'submission' submission.id %}"> <button type="button"
+                                        class="btn btn-sm btn-success">View</button></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                No submissions yet.
+            </div>
+            {% endif %}
+
+            {% endif %}
+        </div>
+        {% if user.role == 'teacher' %}
+        <div class="col-4 border px-4 py-4 rounded-4" id="task-update-form">
+            <form action="{% url 'update-task' subject.slug task.id %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="">
+                    <div class="mb-3">
+                        <label for="exampleFormControlInput1" class="form-label">Task Type</label>
+                        <select required class="form-select" aria-label="Default select example" name="task_type"
+                            required>
+                            <option {% if task.task_type == 'assignment' %} selected {% endif %} value="assignment">
+                                Assignment</option>
+                            <option {% if task.task_type == 'lab report' %} selected {% endif %} value="lab report">Lab
+                                Report</option>
+                            <option {% if task.task_type == 'case study' %} selected {% endif %} value="case study">Case
+                                Study</option>
+                            <option {% if task.task_type == 'presentation' %} selected {% endif %} value="presentation">
+                                Presentation</option>
+                        </select>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea rows="5" name="description" class="form-control" id="floatingTextarea2" required
+                            style="height: 140px">{{ task.description }}</textarea>
+                        <label for="floatingTextarea2">Description</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="exampleFormControlInput1" class="form-label">Attachment</label>
+                        <input name="attachment" type="file" class="form-control" id="exampleFormControlInput1"
+                            required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="exampleFormControlInput1" class="form-label">Due Date</label>
+                        <input name="duration" type="date" class="form-control" id="exampleFormControlInput1" required
+                            value="{{ task.duration }}" />
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between mt-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="can_submit_online" id="flexRadioDefault1"
+                                value="true" {% if task.can_submit_online %} checked {% endif %} />
+                            <label class="form-check-label" for="flexRadioDefault1">
+                                Submit Online
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="can_submit_online" id="flexRadioDefault2"
+                                value="false" {% if not task.can_submit_online %} checked {% endif %} />
+                            <label class="form-check-label" for="flexRadioDefault2">
+                                Submit Physically
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button {% if user.role == 'student' %} disabled {% endif %} type="submit"
+                    class="btn btn-primary mt-4 w-100">
+                    Update Task
+                </button>
+            </form>
+        </div>
+        {%endif%}
+        {% if user.role == 'student' %}
+        <!-- Student View -->
+        <div class="col-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title text-capitalize"><strong>{{task.task_type}}</strong></h4>
+                    <h6 class="card-subtitle mb-2 text-body-secondary">
+                        {% if task.can_submit_online %}
+                        <span class="badge bg-success">Submit Online</span>
+                        {% else %}
+                        <span class="badge bg-danger">Submit Physically</span>
+                        {% endif %}
+                    </h6>
+                    <p class="card-text">
+                        {{task.description}}
+                    </p>
+                    <div class="d-flex align-items-center justify-content-between">
+
+                        <h6 class="card-subtitle mb-2 text-body-secondary">
+                            Due : {{task.duration}}
+                        </h6>
+                        <p><a target="_blank" href="{{task.attachment.url}}" class="btn btn-sm btn-primary">Open
+                                Attachment</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {%endif%}
+    </div>
+</main>
+<script>
+    document.querySelector('form').addEventListener('submit', function (event) {
+        let isValid = true;
+        let messages = [];
+
+        // Validate Description
+        const description = document.querySelector('textarea[name="description"]').value.trim();
+        const descriptionRegex = /^[A-Za-z\s]+$/; // Checks if description is not only numbers
+        if (description.length < 10) {
+            isValid = false;
+            messages.push('Description must be at least 10 characters long.');
+        }
+        if (!descriptionRegex.test(description)) {
+            isValid = false;
+            messages.push('Description must not contain only numbers.');
+        }
+
+        // Validate Attachment
+        const attachment = document.querySelector('input[name="attachment"]').files[0];
+        if (attachment) {
+            const validExtensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'];
+            const fileExtension = attachment.name.split('.').pop().toLowerCase();
+            if (!validExtensions.includes(fileExtension)) {
+                isValid = false;
+                messages.push('Attachment must be a PDF, Word document, PNG, JPG, or JPEG.');
+            }
+        } else {
+            isValid = false;
+            messages.push('Please upload an attachment.');
+        }
+
+        // Validate Due Date
+        const dueDate = document.querySelector('input[name="duration"]').value;
+        const currentDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+        if (dueDate <= currentDate) {
+            isValid = false;
+            messages.push('Invalid due date.');
+        }
+
+        if (!isValid) {
+            event.preventDefault();
+
+            // Get or create the alert container
+            let alertContainer = document.getElementById('alertContainer');
+            if (!alertContainer) {
+                alertContainer = document.createElement('div');
+                alertContainer.id = 'alertContainer';
+                alertContainer.className = 'alert alert-warning';
+                document.querySelector('#task-update-form').prepend(alertContainer);
+            }
+
+            // Clear previous messages
+            alertContainer.innerHTML = '';
+
+            // Add new messages
+            messages.forEach(message => {
+                const li = document.createElement('li');
+                li.textContent = message;
+                alertContainer.appendChild(li);
+            });
+
+            // Make sure the alert is visible
+            alertContainer.style.display = 'block';
+        }
+    });
+</script>
+{% endblock content %}

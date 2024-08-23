@@ -1,0 +1,44 @@
+{% extends 'common.html' %}
+{% block content %}{% include 'messages.html' %}
+<main class="d-flex">
+    <aside class="position-fixed"> {% include 'sidebar.html' %}</aside>
+
+    <div style="margin-left: 320px;" class="mt-4 w-100 me-5">
+       <h2 class="mb-4"><strong>Students</strong></h2>
+       <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Semester</th>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+          <tr>
+            <th scope="row">{{forloop.counter}}</th>
+            <td>{{student.semester.name}}</td>
+            <td>{{student.full_name}}</td>
+            <td>{{student.email}}</td>
+
+            {% if student.is_verified %}
+            <td>
+                <a href="#" class="btn btn-sm btn-primary">Edit</a>
+                <a href="#" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+            {% else %}
+            <td>
+                <a href="{% url 'verify-user' student.id %}" class="btn btn-sm btn-success">Verify</a>
+                <a href="#" class="btn btn-sm btn-danger">Reject</a>
+            </td>
+            {% endif %}
+          </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+</main>
+{% endblock content %}

@@ -1,0 +1,53 @@
+{% extends 'common.html' %}
+{% block content %}
+{% include 'messages.html' %}
+{% include 'navbar.html' %}
+
+<main class="container mx-auto my-5">
+    <h3 class="mb-4">
+        <strong>Single Attendance</strong>
+    </h3>
+    <form method="post">
+        {% csrf_token %}
+    <table class="table table-striped mt-5 mb-3">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Roll No.</th>
+                <th scope="col">Name</th>
+                <th scope="col">Status</th>
+            </tr>
+        </thead>
+            <tbody>
+                {% for atd in attendances %}
+                <tr>
+                    <th scope="row">{{forloop.counter}}</th>
+                    <td>{{atd.student.roll_number}}</td>
+                    <td>{{atd.student.full_name}}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+                            <input type="radio" class="btn-check" name="{{atd.student.id}}" id="btnradio1_{{atd.student.id}}"
+                                autocomplete="off" value="on"
+                                {% if atd.is_present %} checked {% endif %}
+                                >
+                            <label class="btn btn-sm btn-outline-success" for="btnradio1_{{atd.student.id}}">Present</label>
+
+                            <input type="radio" class="btn-check" name="{{atd.student.id}}" id="btnradio2_{{atd.student.id}}"
+                                autocomplete="off" value="off"  
+                                {% if not atd.is_present %} checked {% endif %}
+                                >
+                            <label class="btn btn-sm btn-outline-danger" for="btnradio2_{{atd.student.id}}">Absent</label>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-end">
+            <a href="{% url 'attendance' subject.slug %}" class="btn btn-outline-secondary me-2">Back to History</a>
+            <button type="submit" class="btn btn-primary">Update Attendance</button>
+        </div>
+    </form>
+</main>
+
+{% endblock content %}

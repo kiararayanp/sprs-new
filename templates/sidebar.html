@@ -1,0 +1,64 @@
+<div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark vh-100" style="width: 280px;">
+    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <svg class="bi pe-none me-2" width="40" height="32">
+            <use xlink:href="#bootstrap"></use>
+        </svg>
+        {% include 'logo.html' %}
+    </a>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+            <a href="{% url 'admin-panel' %}" class="nav-link text-white {% if request.path == '/admin-panel/' %}active{% endif %}" aria-current="page">
+                <svg class="bi pe-none me-2" width="16" height="16">
+                    <use xlink:href="#home"></use>
+                </svg>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'students' %}" class="nav-link text-white {% if request.path == '/admin-panel/students/' %}active{% endif %}">
+                <svg class="bi pe-none me-2" width="16" height="16">
+                    <use xlink:href="#speedometer2"></use>
+                </svg>
+                Students
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'teachers' %}" class="nav-link text-white {% if request.path == '/admin-panel/teachers/' %}active{% endif %}">
+                <svg class="bi pe-none me-2" width="16" height="16">
+                    <use xlink:href="#speedometer2"></use>
+                </svg>
+                Teachers
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'semesters' %}" class="nav-link text-white {% if request.path == '/admin-panel/semesters/' %}active{% endif %}">
+                <svg class="bi pe-none me-2" width="16" height="16">
+                    <use xlink:href="#table"></use>
+                </svg>
+                Semesters
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'assign-teachers' %}" class="nav-link text-white {% if request.path == '/admin-panel/assign-teachers/' %}active{% endif %}">
+                <svg class="bi pe-none me-2" width="16" height="16">
+                    <use xlink:href="#grid"></use>
+                </svg>
+                Assign Teachers
+            </a>
+        </li>
+    </ul>
+    <hr>
+    <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+           data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{request.user.profile_image.url}}" alt="" width="32" height="32" class="rounded-circle me-2">
+            <strong>
+                {{request.user.full_name}}
+            </strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+            <li><a class="dropdown-item" href="{% url 'logout' %}">Sign out</a></li>
+        </ul>
+    </div>
+</div>

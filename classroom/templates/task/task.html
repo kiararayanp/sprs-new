@@ -1,0 +1,212 @@
+{% extends 'common.html' %}
+{% block content %}
+{% include 'messages.html' %}
+{% include 'navbar.html' %}
+<main class="container mx-auto my-5">
+
+    <div class=" d-flex justify-content-between"">
+        <h3>
+            <strong>Tasks | {{subject.name}}</strong>
+        </h3>
+        
+        {% if request.user.role == 'teacher' %}
+        <!-- Button trigger modal -->
+        <button type=" button" class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#exampleModal">
+        Add Task
+        </button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content p-3">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">
+                            Add Task for {{subject.name}}
+                        </h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="exampleFormControlInput1" class="form-label">Select Task Type</label>
+                                <select class="form-select" aria-label="Default select example" name="task_type"
+                                    required>
+                                    <option value="assignment">Assignment</option>
+                                    <option value="lab report">Lab Report</option>
+                                    <option value="case study">Case Study</option>
+                                    <option value="presentation">Presentation</option>
+                                </select>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <textarea name="description" class="form-control" placeholder="Leave a comment here"
+                                    required id="floatingTextarea2" style="height: 100px"></textarea>
+                                <label for="floatingTextarea2">Description</label>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="exampleFormControlInput1" class="form-label">Attachment</label>
+                                <input name="attachment" type="file" class="form-control" id="exampleFormControlInput1"
+                                    placeholder="name@example.com" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="exampleFormControlInput1" class="form-label">Due Date</label>
+                                <input name="duration" type="date" class="form-control" id="exampleFormControlInput1"
+                                    required />
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="can_submit_online"
+                                        id="flexRadioDefault1" value="true" />
+                                    <label class="form-check-label" for="flexRadioDefault1">
+                                        Submit Online
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="can_submit_online"
+                                        id="flexRadioDefault2" value="false" checked />
+                                    <label class="form-check-label" for="flexRadioDefault2">
+                                        Submit Physically
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Close
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Save changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+
+
+    <!-- Displaying tasks in table -->
+    {% if tasks %}
+    <table class="table table-striped mt-5">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Task Type</th>
+                <th scope="col">Submission</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Attachment</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <th scope="row">
+                    {{forloop.counter}}
+                </th>
+                <td class="text-capitalize">{{task.task_type}}</td>
+                <td>
+                    {% if task.can_submit_online %}
+                    <span class="badge bg-success">Online</span>
+                    {% else %}
+                    <span class="badge bg-danger">Physical</span>
+                    {% endif %}
+                </td>
+                <td>{{task.duration}}</td>
+                <td>
+                    <a href="{{task.attachment.url}}" target="_blank" class="btn btn-sm btn-primary">Open Attachment</a>
+                </td>
+                <td class="text-capitalize">
+                    <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                        <a href="{% url 'single-task' subject.slug task.id %}"> <button type="button"
+                                class="btn btn-sm btn-success">View</button></a>
+                        {% if request.user.role == 'teacher' %}
+                        <a href="{% url 'delete-task' subject.slug task.id  %}">
+                            <button type="button" class="btn btn-sm btn-danger ms-2">Delete</button>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-warning mt-4" role="alert">
+        No tasks available for this subject.
+    </div>
+    {% endif %}
+</main>
+<script>
+    document.querySelector('form').addEventListener('submit', function (event) {
+        let isValid = true;
+        let messages = [];
+
+        // Validate Description
+        const description = document.querySelector('textarea[name="description"]').value.trim();
+        const descriptionRegex = /^[A-Za-z\s]+$/; // Checks if description is not only numbers
+        if (description.length < 10) {
+            isValid = false;
+            messages.push('Description must be at least 10 characters long.');
+        }
+        if (!descriptionRegex.test(description)) {
+            isValid = false;
+            messages.push('Description must not contain only numbers.');
+        }
+
+        // Validate Attachment
+        const attachment = document.querySelector('input[name="attachment"]').files[0];
+        if (attachment) {
+            const validExtensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'];
+            const fileExtension = attachment.name.split('.').pop().toLowerCase();
+            if (!validExtensions.includes(fileExtension)) {
+                isValid = false;
+                messages.push('Attachment must be a PDF, Word document, PNG, JPG, or JPEG.');
+            }
+        } else {
+            isValid = false;
+            messages.push('Please upload an attachment.');
+        }
+
+        // Validate Due Date
+        const dueDate = document.querySelector('input[name="duration"]').value;
+        const currentDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+        if (dueDate <= currentDate) {
+            isValid = false;
+            messages.push('Invalid due date.');
+        }
+
+        if (!isValid) {
+            event.preventDefault();
+
+            // Get or create the alert container
+            let alertContainer = document.getElementById('alertContainer');
+            if (!alertContainer) {
+                alertContainer = document.createElement('div');
+                alertContainer.id = 'alertContainer';
+                alertContainer.className = 'alert alert-warning';
+                document.querySelector('.modal-body').prepend(alertContainer);
+            }
+
+            // Clear previous messages
+            alertContainer.innerHTML = '';
+
+            // Add new messages
+            messages.forEach(message => {
+                const li = document.createElement('li');
+                li.textContent = message;
+                alertContainer.appendChild(li);
+            });
+
+            // Make sure the alert is visible
+            alertContainer.style.display = 'block';
+        }
+    });
+</script>
+
+
+
+{% endblock content %}
