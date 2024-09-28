@@ -1,44 +1,81 @@
 {% extends 'common.html' %}
 {% block content %}{% include 'messages.html' %}
 <main class="d-flex">
-    <aside class="position-fixed"> {% include 'sidebar.html' %}</aside>
+  <aside class="position-fixed"> {% include 'sidebar.html' %}</aside>
 
-    <div style="margin-left: 320px;" class="mt-4 w-100 me-5">
-       <h2 class="mb-4"><strong>Students</strong></h2>
-       <table class="table table-striped">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Semester</th>
-            <th scope="col">Name</th>
-            <th scope="col">Email</th>
+  <div style="margin-left: 320px;" class="mt-4 w-100 me-5">
+    <h2 class="mb-4"><strong>Students</strong></h2>
+    <form class="my-3 d-flex justify-content-end">
+      {% csrf_token %}
+      <div class="input-group mb-3 w-50 gap-2">
+        <input type="text" class="form-control" placeholder="Enter student name ..." aria-label="Student's username"  name="q" aria-describedby="basic-addon2">
+        <div class="input-group-append">
+          <button class="btn btn-primary" id="basic-addon2">Search</button>
+        </div>
+      </div>
+    </form>
+    {% if students %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Semester</th>
+          <th scope="col">Name</th>
+          <th scope="col">Email</th>
 
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-            {% for student in students %}
-          <tr>
-            <th scope="row">{{forloop.counter}}</th>
-            <td>{{student.semester.name}}</td>
-            <td>{{student.full_name}}</td>
-            <td>{{student.email}}</td>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <th scope="row">{{forloop.counter}}</th>
+          <td>{{student.semester.name}}</td>
+          <td>{{student.full_name}}</td>
+          <td>{{student.email}}</td>
 
-            {% if student.is_verified %}
-            <td>
-                <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                <a href="#" class="btn btn-sm btn-danger">Delete</a>
-            </td>
-            {% else %}
-            <td>
-                <a href="{% url 'verify-user' student.id %}" class="btn btn-sm btn-success">Verify</a>
-                <a href="#" class="btn btn-sm btn-danger">Reject</a>
-            </td>
-            {% endif %}
-          </tr>
-            {% endfor %}
-        </tbody>
-      </table>
-    </div>
+          {% if student.is_verified %}
+          <td>
+            <a href="{% url 'edit-student' student.id %}" class="btn btn-sm btn-primary">Edit</a>
+            <!-- <a href="{% url 'delete-user' student.id %}" class="btn btn-sm btn-danger">Delete</a> -->
+            <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+            data-bs-target="#deleteConfirmModal{{student.id}}">Delete</button>
+          </td>
+          {% else %}
+          <td>
+            <a href="{% url 'verify-user' student.id %}" class="btn btn-sm btn-success">Verify</a>
+            <a href="{% url 'reject-user' student.id %}" class="btn btn-sm btn-danger">Reject</a>
+          </td>
+          {% endif %}
+        </tr>
+        <div class="modal fade" id="deleteConfirmModal{{student.id}}" tabindex="-1"
+                    aria-labelledby="deleteConfirmModalLabel{{student.id}}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteConfirmModalLabel{{student.id}}">Confirm Deletion
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to delete student "{{student.full_name}}"?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <a href="{% url 'delete-user' student.id %}" class="btn btn-danger">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+      No students found!
+      </div>
+    {% endif %}
+  </div>
 </main>
 {% endblock content %}

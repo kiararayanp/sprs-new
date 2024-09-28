@@ -7,17 +7,17 @@
 <main class="container mx-auto my-5">
     <h3>
         <strong><span class="text-capitalize">
-                {% if user.role == 'student' %}
+                {% if user.role  ==  'student' %}
                 {{task.task_type}}
                 {% endif %}
-                {% if user.role == 'teacher' %}
+                {% if user.role  ==  'teacher' %}
                 Submissions
                 {% endif %}
             </span> | {{subject.name}}</strong>
     </h3>
     <div class="row mt-5">
         <div class="col-8 pe-5">
-            {% if user.role == 'student' %}
+            {% if user.role  ==  'student' %}
             <!-- Student submission form -->
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -25,10 +25,15 @@
                     <input required name="attachment" type="file" class="form-control" id="exampleFormControlInput1"
                         placeholder="name@example.com" />
                 </div>
-                <button {% if not task.can_submit_online or submission %} disabled {% endif %} type="submit"
+                <button {% if not task.can_submit_online or submission or task_expired %} disabled {% endif %} type="submit"
                     class="btn btn-primary">
                     Submit Assignment
                 </button>
+                {% if task_expired %}
+                <div class="alert alert-danger mt-3" role="alert">
+                    This task has expired.
+                </div>
+                {% endif %}
                 <p class="mt-4">
                     {% if not task.can_submit_online %}
                 <figcaption class="blockquote-footer">
@@ -58,13 +63,13 @@
                             </div>
                             <div>
                                 <span class="text-capitalize">
-                                    {% if submission.status == 'unchecked' %}
+                                    {% if submission.status  ==  'unchecked' %}
                                     <span class="badge bg-warning">Unchecked</span>
                                     {% endif %}
-                                    {% if submission.status == 'checked' %}
+                                    {% if submission.status  ==  'checked' %}
                                     <span class="badge bg-success">Checked</span>
                                     {% endif %}
-                                    {% if submission.status == 'rejected' %}
+                                    {% if submission.status  ==  'rejected' %}
                                     <span class="badge bg-danger">Rejected</span>
                                     {% endif %}
                                 </span>
@@ -72,22 +77,22 @@
                         </div>
                         <div class="d-flex justify-content-end">
                             <!-- Delete button Here -->
-                            {% if submission.status == 'rejected' %}
+                            {% if submission.status  ==  'rejected' %}
                             <a href="{% url 'delete-submission' submission.id %}"
                                 class="btn btn-danger btn-sm">Delete</a>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                {%endif%}
-                {% if not submission %}
-                <div class="alert alert-info" role="alert">
-                    You have not submitted yet.
-                </div>
-                {%endif%}
+                    {%endif%}
+                    {% if not submission %}
+                    <div class="alert alert-info" role="alert">
+                        You have not submitted yet.
+                      </div>
+                    {%endif%}
             </div>
             {% endif %}
-            {% if user.role == 'teacher' %}
+            {% if user.role  ==  'teacher' %}
             <!-- teacher will view submissions here -->
             {% if all_submissions %}
             <div>
@@ -125,20 +130,19 @@
             {% else %}
             <div class="alert alert-info" role="alert">
                 No submissions yet.
-            </div>
+              </div>
             {% endif %}
 
             {% endif %}
         </div>
-        {% if user.role == 'teacher' %}
+        {% if user.role  ==  'teacher' %}
         <div class="col-4 border px-4 py-4 rounded-4" id="task-update-form">
             <form action="{% url 'update-task' subject.slug task.id %}" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="">
                     <div class="mb-3">
                         <label for="exampleFormControlInput1" class="form-label">Task Type</label>
-                        <select required class="form-select" aria-label="Default select example" name="task_type"
-                            required>
+                        <select required class="form-select" aria-label="Default select example" name="task_type" required>
                             <option {% if task.task_type == 'assignment' %} selected {% endif %} value="assignment">
                                 Assignment</option>
                             <option {% if task.task_type == 'lab report' %} selected {% endif %} value="lab report">Lab
@@ -157,8 +161,7 @@
 
                     <div class="mb-3">
                         <label for="exampleFormControlInput1" class="form-label">Attachment</label>
-                        <input name="attachment" type="file" class="form-control" id="exampleFormControlInput1"
-                            required />
+                        <input name="attachment" type="file" class="form-control" id="exampleFormControlInput1"  />
                     </div>
                     <div class="mb-3">
                         <label for="exampleFormControlInput1" class="form-label">Due Date</label>
@@ -189,7 +192,7 @@
             </form>
         </div>
         {%endif%}
-        {% if user.role == 'student' %}
+        {% if user.role  ==  'student' %}
         <!-- Student View -->
         <div class="col-4">
             <div class="card">
@@ -221,68 +224,66 @@
 </main>
 <script>
     document.querySelector('form').addEventListener('submit', function (event) {
-        let isValid = true;
-        let messages = [];
+    let isValid = true;
+    let messages = [];
 
-        // Validate Description
-        const description = document.querySelector('textarea[name="description"]').value.trim();
-        const descriptionRegex = /^[A-Za-z\s]+$/; // Checks if description is not only numbers
-        if (description.length < 10) {
+    // Validate Description
+    const description = document.querySelector('textarea[name="description"]').value.trim();
+    const descriptionRegex = /^[A-Za-z\s]+$/; // Checks if description is not only numbers
+    if (description.length < 10) {
+        isValid = false;
+        messages.push('Description must be at least 10 characters long.');
+    }
+    if (!descriptionRegex.test(description)) {
+        isValid = false;
+        messages.push('Description must not contain only numbers.');
+    }
+
+    // Validate Attachment
+    const attachment = document.querySelector('input[name="attachment"]').files[0];
+    if (attachment) {
+        const validExtensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'];
+        const fileExtension = attachment.name.split('.').pop().toLowerCase();
+        if (!validExtensions.includes(fileExtension)) {
             isValid = false;
-            messages.push('Description must be at least 10 characters long.');
+            messages.push('Attachment must be a PDF, Word document, PNG, JPG, or JPEG.');
         }
-        if (!descriptionRegex.test(description)) {
-            isValid = false;
-            messages.push('Description must not contain only numbers.');
-        }
+    }
 
-        // Validate Attachment
-        const attachment = document.querySelector('input[name="attachment"]').files[0];
-        if (attachment) {
-            const validExtensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'];
-            const fileExtension = attachment.name.split('.').pop().toLowerCase();
-            if (!validExtensions.includes(fileExtension)) {
-                isValid = false;
-                messages.push('Attachment must be a PDF, Word document, PNG, JPG, or JPEG.');
-            }
-        } else {
-            isValid = false;
-            messages.push('Please upload an attachment.');
-        }
+    // Validate Due Date
+    const dueDate = document.querySelector('input[name="duration"]').value;
+    const currentDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+    if (dueDate <= currentDate) {
+        isValid = false;
+        messages.push('Invalid due date.');
+    }
 
-        // Validate Due Date
-        const dueDate = document.querySelector('input[name="duration"]').value;
-        const currentDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
-        if (dueDate <= currentDate) {
-            isValid = false;
-            messages.push('Invalid due date.');
+    if (!isValid) {
+        event.preventDefault();
+
+        // Get or create the alert container
+        let alertContainer = document.getElementById('alertContainer');
+        if (!alertContainer) {
+            alertContainer = document.createElement('div');
+            alertContainer.id = 'alertContainer';
+            alertContainer.className = 'alert alert-warning';
+            document.querySelector('#task-update-form').prepend(alertContainer);
         }
 
-        if (!isValid) {
-            event.preventDefault();
+        // Clear previous messages
+        alertContainer.innerHTML = '';
 
-            // Get or create the alert container
-            let alertContainer = document.getElementById('alertContainer');
-            if (!alertContainer) {
-                alertContainer = document.createElement('div');
-                alertContainer.id = 'alertContainer';
-                alertContainer.className = 'alert alert-warning';
-                document.querySelector('#task-update-form').prepend(alertContainer);
-            }
+        // Add new messages
+        messages.forEach(message => {
+            const li = document.createElement('li');
+            li.textContent = message;
+            alertContainer.appendChild(li);
+        });
 
-            // Clear previous messages
-            alertContainer.innerHTML = '';
+        // Make sure the alert is visible
+        alertContainer.style.display = 'block';
+    }
+});
 
-            // Add new messages
-            messages.forEach(message => {
-                const li = document.createElement('li');
-                li.textContent = message;
-                alertContainer.appendChild(li);
-            });
-
-            // Make sure the alert is visible
-            alertContainer.style.display = 'block';
-        }
-    });
 </script>
 {% endblock content %}

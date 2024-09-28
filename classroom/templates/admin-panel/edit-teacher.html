@@ -1,0 +1,108 @@
+{% extends 'common.html' %}
+{% block content %}
+{% include 'messages.html' %}
+<main class="d-flex">
+    <aside class="position-fixed"> {% include 'sidebar.html' %}</aside>
+
+    <div style="margin-left: 320px;" class="mt-4">
+        <div class="d-flex justify-content-center">
+            <div class="visually-hidden position-absolute top-0 end-0 m-3" id="errorContainer">
+                <div class="alert alert-warning alert-dismissible fade show" id="errorMsg" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <ul id="errorList"></ul>
+                </div>
+            </div>
+            <form class="mx-auto w-50" method="post" enctype="multipart/form-data" id="teacherRegisterForm">
+                {% csrf_token %}
+                <h4 class="mb-3">Edit Teacher</h4>
+                <div class="mb-2">
+                    <label for="exampleFormControlInput1" class="form-label">Full Name</label>
+                    <input name="full_name" type="text" class="form-control" id="fullName" required
+                        value="{{teacher.full_name}}" />
+                </div>
+                <div class="mb-2">
+                    <label for="exampleFormControlInput1" class="form-label">Email address</label>
+                    <input name="email" type="email" class="form-control" id="email" required
+                        value="{{teacher.email}}" />
+                </div>
+                <div class="mb-2">
+                    <label for="exampleFormControlInput1" class="form-label">Phone Number</label>
+                    <input name="phone_number" type="number" class="form-control" id="phone" required
+                        value="{{teacher.phone_number}}" />
+                </div>
+                <div class="mb-2">
+                    <img src="{{teacher.profile_image.url}}" class="img-thumbnail w-25 h-25 object-cover" alt="teacher-image"> <br>
+                    <label for="formFile" class="form-label">Image</label>
+                    <input name="profile_image" class="form-control" type="file" id="profileImage">
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary w-100">Update Teacher</button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            document.getElementById('teacherRegisterForm').addEventListener('submit', function (event) {
+                let isValid = true;
+                let messages = [];
+
+                // Validate Full Name
+                const fullName = document.getElementById('fullName').value.trim();
+                const fullNameRegex = /^[A-Za-z]+( [A-Za-z]+){0,2}$/;
+                if (!fullNameRegex.test(fullName)) {
+                    isValid = false;
+                    messages.push('Full Name should only contain alphabets and up to 2 spaces.');
+                }
+
+                // Validate Email
+                const email = document.getElementById('email').value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    isValid = false;
+                    messages.push('Please enter a valid email address.');
+                }
+
+                // Validate Phone Number
+                const phone = document.getElementById('phone').value.trim();
+                const phoneRegex = /^[0-9]{10}$/;
+                if (!phoneRegex.test(phone)) {
+                    isValid = false;
+                    messages.push('Please enter a valid phone number with 10 digits.');
+                }
+                if (phone[0] !== '9') {
+                    isValid = false;
+                    messages.push('Phone number must begin with 9.');
+                }
+
+                // Validate Image
+                const profileImage = document.getElementById('profileImage').files[0];
+
+                const validImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!validImageTypes.includes(profileImage.type)) {
+                    isValid = false;
+                    messages.push('Image must be in jpg, jpeg, png, or webp format.');
+                }
+
+
+
+
+                if (!isValid) {
+                    event.preventDefault();
+                    const errorContainer = document.getElementById('errorContainer');
+                    const errorList = document.getElementById('errorList');
+
+                    errorList.innerHTML = '';
+                    messages.forEach(message => {
+                        const li = document.createElement('li');
+                        li.textContent = message;
+                        li.classList.add('mb-2');
+                        errorList.appendChild(li);
+                    });
+
+                    errorContainer.classList.remove('visually-hidden');
+                }
+            });
+        </script>
+    </div>
+</main>
+{% endblock content %}

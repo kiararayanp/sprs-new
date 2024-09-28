@@ -9,11 +9,13 @@ from .models import *
 from datetime import datetime
 from django.db.models import Avg, Q
 from utils.regression import predict_final_exam_score as predict
-
+from django.utils import timezone
 
 def index(request):
     if request.user.is_authenticated:
+        print("Hello")
         return redirect("home")
+    
     return render(request, "index.html")
 
 
@@ -225,6 +227,8 @@ def single_attendance(request, pk, date):
 # task
 @login_required(login_url="login")
 def task(request, pk):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
     try:
         subject = Subject.objects.get(slug=pk)
         tasks = Task.objects.filter(subject=subject)
@@ -263,7 +267,10 @@ def task(request, pk):
 
 
 # single task
+@login_required(login_url="login")
 def single_task(request, pk, taskId):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
     try:
         subject = Subject.objects.get(slug=pk)
         # check if this subject is taught by the teacher
@@ -275,6 +282,9 @@ def single_task(request, pk, taskId):
             return redirect("error")
 
         task = Task.objects.get(id=taskId)
+        # Check if the task is past its due date
+        current_date = timezone.now().date()
+        task_expired = task.duration and task.duration < current_date
 
         if request.method == "POST":
             if request.user.role != "student":
@@ -302,6 +312,7 @@ def single_task(request, pk, taskId):
             "submission": submission,
             "remarks": remarks,
             "all_submissions": all_submissions,
+            "task_expired": task_expired,
         }
         return render(request, "task/single-task.html", context)
     except Subject.DoesNotExist or Task.DoesNotExist:
@@ -309,7 +320,10 @@ def single_task(request, pk, taskId):
 
 
 # update task
+@login_required(login_url="login")
 def update_task(request, pk, taskId):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
     try:
         subject = Subject.objects.get(slug=pk)
         task = Task.objects.get(id=taskId)
@@ -343,7 +357,10 @@ def update_task(request, pk, taskId):
 
 
 # delete task
+@login_required(login_url="login")
 def delete_task(request, pk, taskId):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
     try:
         if request.user.role != "teacher":
             return redirect("error")
@@ -364,6 +381,8 @@ def delete_task(request, pk, taskId):
 # submission
 @login_required(login_url="login")
 def single_submission(request, pk):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
     try:
         user = request.user
         submission = Submission.objects.get(id=pk)
@@ -421,6 +440,8 @@ def single_submission(request, pk):
 # delete submission
 @login_required(login_url="login")
 def delete_submission(request, pk):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
     try:
         submission = Submission.objects.get(id=pk)
         if request.user.role != "student":
@@ -441,6 +462,8 @@ def delete_submission(request, pk):
 # record marks
 @login_required(login_url="login")
 def record_marks(request, pk):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
     try:
         subject = Subject.objects.get(slug=pk)
         students = (
@@ -508,6 +531,8 @@ def record_marks(request, pk):
 # single marks
 @login_required(login_url="login")
 def single_marks(request, pk, exam_type):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
     try:
         subject = Subject.objects.get(slug=pk)
         results = ExamResults.objects.filter(
@@ -522,6 +547,7 @@ def single_marks(request, pk, exam_type):
 
             # Flag to check if any IntegrityError occurs
             integrity_error_occurred = False
+            marks_error_occurred = False
 
             for res in results:
                 marks = request.POST.get(f"marks_{res.student.id}")
@@ -531,12 +557,19 @@ def single_marks(request, pk, exam_type):
                     res.mid_term = form_exam_type == "mid-term"
                     res.pre_board = form_exam_type == "pre-board"
 
+                    if res.obtained_marks > res.full_marks:
+                        marks_error_occurred = True
+                        break
+
                     try:
                         res.save()
                     except IntegrityError:
                         # Set the flag to True if any IntegrityError occurs
                         integrity_error_occurred = True
 
+            if marks_error_occurred:
+                messages.error(request, "Marks cannot be greater than full marks.")
+                return redirect("single-marks", pk=pk, exam_type=exam_type)
             if integrity_error_occurred:
                 messages.error(
                     request, f"Marks already recorded for {form_exam_type.capitalize()}"
@@ -571,6 +604,8 @@ def message(request):
 
 @login_required(login_url="login")
 def prediction(request, pk):
+    if request.user.role == "admin":
+        return redirect("admin-panel")
 
     if request.user.role != "teacher":
         return redirect("error")
@@ -674,7 +709,11 @@ def prediction(request, pk):
 def admin_panel(request):
     if request.user.is_anonymous or request.user.role != "admin":
         return redirect("error")
-    return render(request, "admin-panel/dashboard.html")
+    semesters = Semester.objects.all()
+    context = {
+        "semesters": semesters,
+    }
+    return render(request, "admin-panel/dashboard.html", context)
 
 
 @login_required(login_url="login")
@@ -710,6 +749,9 @@ def delete_semester(request, pk):
     if request.user.role != "admin" or request.user.is_anonymous:
         return redirect("error")
     semester = Semester.objects.get(id=pk)
+    if MyUser.objects.filter(semester=semester).exists():
+        messages.error(request, "Semester has students. Can't delete.")
+        return redirect("semesters")
     semester.delete()
     messages.success(request, "Semester deleted successfully.")
     return redirect("semesters")
@@ -758,7 +800,12 @@ def delete_subject(request, pk):
 def students(request):
     if request.user.role != "admin" or request.user.is_anonymous:
         return redirect("error")
+    
     students = MyUser.objects.filter(role="student").order_by("is_verified")
+    q = request.GET.get("q")
+    if q:
+        students = MyUser.objects.filter(role="student", full_name__icontains=q)
+        
     context = {
         "students": students,
     }
@@ -769,8 +816,12 @@ def students(request):
 def teachers(request):
     if request.user.role != "admin":
         return redirect("error")
-
+    
+    q = request.GET.get("q")
     teachers = MyUser.objects.filter(role="teacher").order_by("is_verified")
+    if q:
+        teachers = MyUser.objects.filter(role="teacher", full_name__icontains=q)
+
     context = {
         "teachers": teachers,
     }
@@ -783,13 +834,22 @@ def assign_teachers(request):
         return redirect("error")
     teachers = MyUser.objects.filter(role="teacher")
     subjects = Subject.objects.all()
+    teacher_teaches = TeacherTeaches.objects.all()
 
     if request.method == "POST":
-        teacher_id = request.POST.get("teacher_id")
-        subject_id = request.POST.get("subject_id")
+        teacher_id = request.POST.get("teacher")
+        subject_id = request.POST.get("subject")
 
         teacher = MyUser.objects.get(id=teacher_id)
         subject = Subject.objects.get(id=subject_id)
+
+        if TeacherTeaches.objects.filter(teacher=teacher, subject__semester=subject.semester).exists():
+            messages.error(request, "Teacher already assigned to a subject in this semester.")
+            return redirect("assign-teachers")
+        
+        if TeacherTeaches.objects.filter(subject=subject).exists():
+            messages.error(request, "Subject already assigned to a teacher.")
+            return redirect("assign-teachers")
 
         TeacherTeaches.objects.create(teacher=teacher, subject=subject)
         messages.success(request, "Subject assigned to teacher successfully.")
@@ -798,11 +858,23 @@ def assign_teachers(request):
     context = {
         "teachers": teachers,
         "subjects": subjects,
+        "teacher_teaches": teacher_teaches,
     }
     return render(request, "admin-panel/assign-teachers.html", context)
 
+@login_required(login_url="login")
+def delete_teacher_teaches(request, pk):
+    try:
+        if request.user.role != "admin":
+            return redirect("error")
+        teacher_teaches = TeacherTeaches.objects.get(id=pk)
+        teacher_teaches.delete()
+        messages.success(request, "Subject unassigned from teacher successfully.")
+        return redirect("assign-teachers")
+    except TeacherTeaches.DoesNotExist:
+        return redirect("error")
 
-# Verify students and teachers
+
 @login_required(login_url="login")
 def verify_user(request, pk):
     if request.user.role != "admin":
@@ -814,3 +886,86 @@ def verify_user(request, pk):
     if user.role == "student":
         return redirect("students")
     return redirect("teachers")
+
+
+def reject_user(request, pk):
+    if request.user.role != "admin":
+        return redirect("error")
+    user = MyUser.objects.get(id=pk)
+    user.delete()
+    messages.success(request, "User rejected.")
+    if user.role == "student":
+        return redirect("students")
+    return redirect("teachers")
+
+
+@login_required(login_url="login")
+def delete_user(request, pk):
+    if request.user.role != "admin":
+        return redirect("error")
+    user = MyUser.objects.get(id=pk)
+    user.delete()
+    messages.success(request, "User deleted successfully.")
+    if user.role == "student":
+        return redirect("students")
+    return redirect("teachers")
+
+
+@login_required(login_url="login")
+def edit_teacher(request, pk):
+    try:
+        if request.user.role != "admin":
+            return redirect("error")
+        teacher = MyUser.objects.get(id=pk)
+
+        if request.method == "POST":
+            full_name = request.POST.get("full_name")
+            email = request.POST.get("email")
+            phone_number = request.POST.get("phone_number")
+            profile_image = request.FILES.get("profile_image")
+
+            teacher.full_name = full_name
+            teacher.email = email
+            teacher.phone_number = phone_number
+            if profile_image:
+                teacher.profile_image = profile_image
+            teacher.save()
+            messages.success(request, "Teacher updated successfully.")
+            return redirect("teachers")
+        context = {
+            "teacher": teacher,
+        }
+        return render(request, "admin-panel/edit-teacher.html", context)
+    except MyUser.DoesNotExist:
+        return redirect("error")
+
+
+@login_required(login_url="login")
+def edit_student(request, pk):
+    try:
+        if request.user.role != "admin":
+            return redirect("error")
+        student = MyUser.objects.get(id=pk)
+        semesters = Semester.objects.all()
+
+        if request.method == "POST":
+            full_name = request.POST.get("full_name")
+            email = request.POST.get("email")
+            semester_id = request.POST.get("semester_id")
+            profile_image = request.FILES.get("profile_image")
+
+            student.full_name = full_name
+            student.email = email
+            student.semester = Semester.objects.get(id=semester_id)
+            if profile_image:
+                student.profile_image = profile_image
+            student.save()
+            messages.success(request, "Student updated successfully.")
+            return redirect("students")
+        context = {
+            "student": student,
+            "semesters": semesters,
+        }
+        return render(request, "admin-panel/edit-student.html", context)
+    except MyUser.DoesNotExist:
+        return redirect("error")

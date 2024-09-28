@@ -5,7 +5,31 @@
     <aside class="position-fixed"> {% include 'sidebar.html' %}</aside>
 
     <div style="margin-left: 320px;" class="mt-4">
-       Dashboard Page
-    </div>
+
+<h1><strong>
+    Welcome Admin!
+</strong></h1>
+
+        <!-- <h2><strong>Dashboard</strong></h2>
+
+    
+        <div class="container text-center">
+            <div class="row gap-5">
+                {% for semester in semesters %}
+                <div class="col-4 mt-4 me-5">
+                    <div class="card" style="width: 400px;">
+                        <h5 class="card-header">{{semester.name}}</h5>
+                        <div class="card-body">
+                            <h1 class="card-title">{{semester.students.count}}</h1>
+                            <p class="card-text">Students
+                            </p>
+                             <a href="#" class="btn btn-primary">View Students</a>
+                         </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+            </div>
+        </div> -->
 </main>
 {% endblock content %}

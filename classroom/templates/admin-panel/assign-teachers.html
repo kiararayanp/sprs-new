@@ -4,7 +4,130 @@
     <aside class="position-fixed"> {% include 'sidebar.html' %}</aside>
 
     <div style="margin-left: 320px;" class="mt-4">
-       Assign Teachers
+        <h1 class="mb-3">Assign Teachers</h1>
+        <p class="alert alert-info" role="alert">
+            Here you can assign teachers to subjects. Select the subject and the teacher from the dropdowns and click
+            on the assign button.
+        </p>
+        <form class="mt-5" method="post">
+            {% csrf_token %}
+            <div class="d-flex flex-column gap-3 mb-4">
+                <div class="form-group">
+                    <label for="teacherSelect" class="form-label">Select Teacher</label>
+                    <select id="teacherSelect" class="form-select select2 w-50" name="teacher" required>
+                        <option></option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="subjectSelect" class="form-label">Select Subject</label>
+                    <select id="subjectSelect" class="form-select select2 w-50" name="subject" required>
+                        <option></option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-primary px-4 py-2">Assign Teacher</button>
+            </div>
+        </form>
+
+        <div class="mt-5">
+            <h2 class="my-2"><strong>Assigned Teachers</strong></h2>
+            {% if teacher_teaches %}
+            <table class="table taple-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Semester</th>
+                    <th scope="col">Actions</th>
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for t in teacher_teaches %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>{{ t.teacher.full_name }}</td>
+                        <td>{{ t.subject.name }}</td>
+                        <td>{{ t.subject.semester }}</td>
+                        <td>
+                            <a href="{% url 'delete-teacher-teaches' t.id %}">
+                                <button class="btn btn-sm btn-danger">Remove</button>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                  
+                </tbody>
+              </table>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                No teachers assigned yet!
+            </div>
+            {% endif %}
+        </div>
     </div>
 </main>
+
+<!-- Include jQuery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Include Select2 CSS and JS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<!-- Custom Styles for Better Appearance -->
+<style>
+    .select2-container .select2-selection--single {
+        height: 45px; /* Adjust height for a better look */
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #495057;
+        line-height: 28px; /* Adjust line height for better alignment */
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 45px; /* Adjust height to match the input */
+        right: 10px;
+    }
+
+    .select2-dropdown {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    .select2-search--dropdown .select2-search__field {
+        padding: 10px;
+        font-size: 16px; /* Increase font size for better visibility */
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        // Initialize Select2 on elements with the class 'select2'
+        $('.select2').select2({
+            placeholder: 'Select an option',
+            allowClear: true,
+            closeOnSelect: true // Close dropdown when an option is selected
+        });
+
+        // Event to close the Select2 dropdown when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.select2-container').length) {
+                $('.select2').select2('close'); // Close the dropdown
+            }
+        });
+    });
+</script>
+
 {% endblock content %}

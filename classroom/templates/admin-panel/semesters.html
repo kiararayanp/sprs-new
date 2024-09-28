@@ -7,8 +7,7 @@
         <h2 class="mb-4"><strong>Semesters</strong></h2>
         <!-- Button trigger modal -->
         <div class="d-flex justify-content-end mt-2">
-            <button type="button" class="btn btn-primary"
-                data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
                 Add Semester
             </button>
 
@@ -23,10 +22,10 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="form-floating mb-3">
+                            <div class="mb-3">
+                                <label for="floatingInput">Semester Name</label>
                                 <input required type="text" class="form-control" id="floatingInput" name="semester_name"
-                                    placeholder="name@example.com">
-                                <label for="floatingInput">Eg: First Semester</label>
+                                    placeholder="Eg. First Semester">
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -37,6 +36,7 @@
                 </div>
             </div>
         </div>
+        {% if semesters %}
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -51,16 +51,43 @@
                     <th scope="row">{{forloop.counter}}</th>
                     <td>{{semester.name}}</td>
                     <td>
-                        <a href="{% url 'delete-semester' semester.id %}" class="btn btn-sm
-                            btn-danger">Delete</a>
+                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                            data-bs-target="#deleteConfirmModal{{semester.id}}">Delete</button>
                         <a href="{% url 'semester-subjects' semester.name %}" class="btn btn-sm
                             btn-primary">View Subjects</a>
                     </td>
 
-
-                    {% endfor %}
+                </tr>
+                <!-- Delete Confirmation Modal -->
+                <div class="modal fade" id="deleteConfirmModal{{semester.id}}" tabindex="-1"
+                    aria-labelledby="deleteConfirmModalLabel{{semester.id}}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteConfirmModalLabel{{semester.id}}">Confirm Deletion
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to delete the semester "{{semester.name}}"?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <a href="{% url 'delete-semester' semester.id %}" class="btn btn-danger">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </tbody>
         </table>
+        {% else %}
+        <div class="alert alert-info" role="alert">
+            No semesters found!
+
+        </div>
+        {% endif %}
     </div>
 </main>
 {% endblock content %}

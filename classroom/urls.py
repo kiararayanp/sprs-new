@@ -41,7 +41,9 @@ urlpatterns = [
     # prediction
     path("prediction/<str:pk>", v.prediction, name="prediction"),
     # ========================================================================================
-
+    # !=======================================================================================
+    # !=======================================================================================
+    # !=======================================================================================
     # ! Admin routes
     path("admin-panel/", v.admin_panel, name="admin-panel"),
     path("admin-panel/students/", v.students, name="students"),
@@ -50,6 +52,9 @@ urlpatterns = [
     path("admin-panel/assign-teachers/", v.assign_teachers, name="assign-teachers"),
     # verify
     path("verify/<int:pk>", v.verify_user, name="verify-user"),
+    
+       # dis approve user
+    path("reject/<int:pk>", v.reject_user, name="reject-user"),
 
     # semester subjects
     path("admin-panel/semester-subjects/<str:name>", v.semester_subjects, name="semester-subjects"),
@@ -59,6 +64,20 @@ urlpatterns = [
 
     # delete subject
     path("admin-panel/delete-subject/<int:pk>", v.delete_subject, name="delete-subject"),
+
+    # delete teacher teaches
+    path(
+        "admin-panel/delete-teacher-teaches/<int:pk>",
+        v.delete_teacher_teaches,
+        name="delete-teacher-teaches",
+    ),
+    # delete user
+    path("delete/<int:pk>", v.delete_user, name="delete-user"),
+    # Edit Teacher by admin
+    path("admin-panel/edit-teacher/<int:pk>", v.edit_teacher, name="edit-teacher"),
+    # Edit student by admin
+    path("admin-panel/edit-student/<int:pk>", v.edit_student, name="edit-student"),
+    
     # ========================================================================================
 
 ]

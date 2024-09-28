@@ -20,6 +20,7 @@ class MyLinearRegression:
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 csv_path = os.path.join(base_dir, "csv_dataset.csv")
+
 def predict_final_exam_score(attendance, task, mid_term, pre_board):
     df = pd.read_csv(csv_path)
     X_data = df[["attendance", "task", "mid_term", "pre_board"]].values
